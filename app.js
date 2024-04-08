@@ -12,7 +12,7 @@ require("dotenv").config();
 
 app.use(
   cors({
-    origin: ["https://visualize-ai-client.vercel.app"],
+    origin: ["http://localhost:5173"],
     methods: ["GET", "POST"],
     credentials: true,
   })
