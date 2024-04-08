@@ -67,12 +67,16 @@ router.post("/register", async (req, res, next) => {
 });
 router.post("/login", async (req, res, next) => {
   const { username, password } = req.body;
+  console.log('username', username);
+  console.log('password', password);
   try {
     const authenticatedUser = await users.findOne({ username });
+    console.log('authenticatedUser', authenticatedUser)
     if (!authenticatedUser) {
       const errors = handelErrors("Invalid username");
     }
     const auth = await bcrypt.compare(password, authenticatedUser.password);
+    console.log('auth', auth)
     if (!auth) {
       const errors = handelErrors("Invalid password");
     }
