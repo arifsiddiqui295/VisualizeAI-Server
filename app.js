@@ -12,7 +12,7 @@ require("dotenv").config();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["https://visualizeai-client-production.up.railway.app"],
     methods: ["GET", "POST"],
     credentials: true,
   })
