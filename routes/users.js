@@ -19,10 +19,21 @@ const userSchema = new mongoose.Schema({
     }
   ],
 })
-userSchema.pre("save", async function(){
-  const salt = await bcrypt.genSalt();
-  this.password = await bcrypt.hash(this.password,salt);
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return;
+  }
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
+userSchema.methods.comparepassword = function (password) {
+  return bcrypt.compareSync(password, this.password);
+};
 mongoose.connect(process.env.MONGO_URL).then((result)=>{
   console.log("connected to database")
 }).catch(err=>{

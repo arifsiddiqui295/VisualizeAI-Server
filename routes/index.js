@@ -72,7 +72,7 @@ router.post("/login", async (req, res, next) => {
     if (!authenticatedUser) {
       const errors = handelErrors("Invalid username");
     }
-    const auth = await bcrypt.compare(password, authenticatedUser.password);
+    const auth = await authenticatedUser.comparepassword(req.body.password);
     console.log('auth', auth)
     if (!auth) {
       const errors = handelErrors("Invalid password");
@@ -184,7 +184,7 @@ router.post("/getPost", async (req, res, next) => {
 });
 router.post("/getFeedPost", async (req, res, next) => {
   const posts = await post.find({});
-  console.log("posts = ", posts);
+  // console.log("posts = ", posts);
   res.status(200).json({ success: true, data: posts });
 });
 
