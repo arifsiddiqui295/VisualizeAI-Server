@@ -4,17 +4,14 @@ var axios = require("axios");
 const bcrypt = require("bcrypt");
 var users = require("./users");
 const post = require("./post");
-// require("dotenv").config({ path: "../.env" });
-var mongoose = require("mongoose");
+require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const maxAge = 3 * 24 * 60 * 60;
 const cloudinary = require("cloudinary").v2;
 const createToken = (id) => {
-  return jwt.sign({ id }, "hululu", {
-    expiresIn: maxAge,
-  });
-  return errors;
-};
+    const accessToken = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn:maxAge });
+    return accessToken ;
+  };
 require('dotenv').config(); 
 // console.log("hhh",process.env.OPENAI_API_KEY)
 const handelErrors = (err) => {
@@ -82,26 +79,28 @@ router.post("/login", async (req, res, next) => {
     }
 
     const token = createToken(authenticatedUser._id);
+    console.log("token = ",token)
     res.cookie("jwt", token, {
       withCredentials: true,
       httpOnly: false,
       maxAge: maxAge * 1000,
     });
-    res.status(200).json({ user: authenticatedUser._id, loggedIn: true });
+    res.status(200).json({ user: authenticatedUser._id, loggedIn: true, token: token });
   } catch (error) {
     // Handle other errors
     const errors = handelErrors(error);
+    console.log('error from login ',errors)
     res.json({ errors, created: false });
   }
 });
 router.post("/checkuser", async (req, res) => {
   // console.log("hhh",process.env.OPENAI_API_KEY)
   const token = req.cookies.jwt;
-  // console.log("token = ", token);  
+  console.log("towwwken = ", token);  
   if (token) {
     try {
       const decodedToken = jwt.verify(token, "hululu");
-      // console.log("decodedToken = ", decodedToken);
+      console.log("decodedToken = ", decodedToken);
       const user = await users.findById(decodedToken.id);
       // console.log("user = ", user);
       if (user) {
@@ -185,13 +184,13 @@ router.post("/getPost", async (req, res, next) => {
 });
 router.post("/getFeedPost", async (req, res, next) => {
   const posts = await post.find({});
-  // console.log("posts = ", posts);
+  console.log("posts = ", posts);
   res.status(200).json({ success: true, data: posts });
 });
 
 router.post("/toggleLiked", async (req, res) => {
   const token = req.cookies.jwt;
-  // console.log("token = ", token);
+  console.log("token = ", token);
   if(token){
     const { postId, profileUser } = req.body;
   // console.log("postId = ", postId);
