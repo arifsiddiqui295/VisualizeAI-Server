@@ -108,7 +108,7 @@ router.post("/checkuser", async (req, res) => {
     if (bearer === "Bearer" && token) {
       try {
         // Verify and decode the JWT token
-        const decodedToken = jwt.verify(token, "hululu");
+        const decodedToken = jwt.verify(token,  process.env.JWT_SECRET);
         console.log("decodedtoken = ", decodedToken);
         // Use the decoded token to find the user
         const user = await users.findById(decodedToken.id);

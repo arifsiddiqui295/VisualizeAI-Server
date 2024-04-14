@@ -17,7 +17,6 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
-
 //heehehe
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
