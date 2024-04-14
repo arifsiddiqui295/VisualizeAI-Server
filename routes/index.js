@@ -9,10 +9,12 @@ const jwt = require("jsonwebtoken");
 const maxAge = 3 * 24 * 60 * 60;
 const cloudinary = require("cloudinary").v2;
 const createToken = (id) => {
-    const accessToken = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn:maxAge });
-    return accessToken ;
-  };
-require('dotenv').config(); 
+  const accessToken = jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: maxAge,
+  });
+  return accessToken;
+};
+require("dotenv").config();
 // console.log("hhh",process.env.OPENAI_API_KEY)
 const handelErrors = (err) => {
   let errors = { username: "", password: "" };
@@ -42,7 +44,7 @@ cloudinary.config({
 /* GET home page. */
 router.get("/", function (req, res, next) {
   // res.render("index", { title: "Express" });
-  res.json("hello")
+  res.json("hello");
 });
 router.post("/register", async (req, res, next) => {
   try {
@@ -64,58 +66,72 @@ router.post("/register", async (req, res, next) => {
 });
 router.post("/login", async (req, res, next) => {
   const { username, password } = req.body;
-  console.log('username', username);
-  console.log('password', password);
+  console.log("username", username);
+  console.log("password", password);
   try {
     const authenticatedUser = await users.findOne({ username });
-    console.log('authenticatedUser', authenticatedUser)
+    console.log("authenticatedUser", authenticatedUser);
     if (!authenticatedUser) {
       const errors = handelErrors("Invalid username");
     }
     const auth = await authenticatedUser.comparepassword(req.body.password);
-    console.log('auth', auth)
+    console.log("auth", auth);
     if (!auth) {
       const errors = handelErrors("Invalid password");
     }
 
     const token = createToken(authenticatedUser._id);
-    console.log("token = ",token)
+    console.log("token = ", token);
     res.cookie("jwt", token, {
       withCredentials: true,
       httpOnly: false,
       maxAge: maxAge * 1000,
     });
-    res.status(200).json({ user: authenticatedUser._id, loggedIn: true, token: token });
+    res
+      .status(200)
+      .json({ user: authenticatedUser._id, loggedIn: true, token: token });
   } catch (error) {
     // Handle other errors
     const errors = handelErrors(error);
-    console.log('error from login ',errors)
+    console.log("error from login ", errors);
     res.json({ errors, created: false });
   }
 });
 router.post("/checkuser", async (req, res) => {
-  // console.log("hhh",process.env.OPENAI_API_KEY)
-  const token = req.cookies.jwt;
-  console.log("towwwken = ", token);  
-  if (token) {
-    try {
-      const decodedToken = jwt.verify(token, "hululu");
-      console.log("decodedToken = ", decodedToken);
-      const user = await users.findById(decodedToken.id);
-      // console.log("user = ", user);
-      if (user) {
-        res.json({ status: true, user: user.username }); // Consider returning a different identifier
-      } else {
-        res.json({ status: false });
+  const authorizationHeader = req.headers["authorization"];
+  // console.log("authorizationheader = ", authorizationHeader);
+  // Check if the Authorization header exists
+  if (authorizationHeader) {
+    // Split the header value to separate "Bearer" from the token
+    const [bearer, token] = authorizationHeader.split(" ");
+    console.log("token = ", token);
+    if (bearer === "Bearer" && token) {
+      try {
+        // Verify and decode the JWT token
+        const decodedToken = jwt.verify(token, "hululu");
+        console.log("decodedtoken = ", decodedToken);
+        // Use the decoded token to find the user
+        const user = await users.findById(decodedToken.id);
+        if (user) {
+          res.json({ status: true, user: user.username });
+        } else {
+          res.json({ status: false });
+        }
+      } catch (err) {
+        console.error("JWT verification error:", err);
+        res.json({ status: false, error: "Invalid token" });
       }
-    } catch (err) {
-      console.error("JWT verification error:", err);
-      res.json({ status: false, error: "Invalid token" }); // Generic error message
+    } else {
+      // Invalid Authorization header format
+      console.log("elese chal haya");
+      res.json({ status: false, error: "Invalid Authorization header format" });
     }
   } else {
-    res.json({ status: false });
+    // Authorization header is missing
+    res.json({ status: false, error: "Authorization header missing" });
   }
 });
+
 router.post("/api/logout", async (req, res) => {
   try {
     // Handle logout logic (e.g., invalidate token in database)
@@ -127,7 +143,7 @@ router.post("/api/logout", async (req, res) => {
   }
 });
 router.post("/api/v1/dalle", async (req, res) => {
-  const {prompt } = req.body;
+  const { prompt } = req.body;
   // console.log(prompt);
   try {
     const response = await axios.post(
@@ -189,33 +205,41 @@ router.post("/getFeedPost", async (req, res, next) => {
 });
 
 router.post("/toggleLiked", async (req, res) => {
-  const token = req.cookies.jwt;
-  console.log("token = ", token);
-  if(token){
-    const { postId, profileUser } = req.body;
-  // console.log("postId = ", postId);
-  // console.log("profileUser = ", profileUser);
-  const findLikedUser = await users.findOne({ username: profileUser });
-  // console.log("findLikedUser = ", findLikedUser);
-  const findLikedUserName = findLikedUser.username;
-  // console.log("findLikedUserName = ", findLikedUserName);
-  const findPost = await post.findById(postId);
-  // console.log("find post id: " , findPost)
-  if (findPost) {
-    const index = findPost.like.indexOf(findLikedUserName);
-    if (index === -1) {
-      findPost.like.push(findLikedUserName);
-      console.log(`${findLikedUserName} liked this post.`);
+  const authorizationHeader = req.headers["authorization"];
+  console.log("authorizationheader = ", authorizationHeader);
+  if (authorizationHeader) {
+    const [bearer, token] = authorizationHeader.split(" ");
+    console.log("token from like = ", token);
+    if (bearer === "Bearer" && token) {
+      const { postId, profileUser } = req.body;
+      // console.log("postId = ", postId);
+      console.log("profileUser = ", profileUser);
+      if (!profileUser) {
+        res.json({ success: false, message: "Unauthorized" });
+      } else {
+        const findLikedUser = await users.findOne({ username: profileUser });
+        // console.log("findLikedUser = ", findLikedUser);
+        const findLikedUserName = findLikedUser.username;
+        // console.log("findLikedUserName = ", findLikedUserName);
+        const findPost = await post.findById(postId);
+        // console.log("find post id: " , findPost)
+        if (findPost) {
+          const index = findPost.like.indexOf(findLikedUserName);
+          if (index === -1) {
+            findPost.like.push(findLikedUserName);
+            console.log(`${findLikedUserName} liked this post.`);
+          } else {
+            findPost.like.splice(index, 1);
+            console.log(`${findLikedUserName} unliked this post.`);
+          }
+        }
+        await findPost.save();
+        res.status(200).json(findPost);
+      }
     } else {
-      findPost.like.splice(index, 1);
-      console.log(`${findLikedUserName} unliked this post.`);
+      res.json({ success: false, message: "Unauthorized" });
     }
   }
-  await findPost.save();
-  res.status(200).json(findPost);
-  }
-  else{
-    res.json({success: false, message: "Unauthorized"})
-  }
 });
+
 module.exports = router;
