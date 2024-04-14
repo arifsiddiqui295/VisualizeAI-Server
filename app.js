@@ -12,11 +12,13 @@ require("dotenv").config();
 
 app.use(
   cors({
-    origin: ['http://localhost:5173',"https://visualizeai-client-production.up.railway.app",'https://661ad8cd528b3dcc047dac12--astounding-torrone-6a753e.netlify.app','https://astounding-torrone-6a753e.netlify.app'],
+    origin:true,
     methods: ["GET", "POST"],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
