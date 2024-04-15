@@ -49,7 +49,7 @@ router.get("/", function (req, res, next) {
 router.post("/register", async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
-
+    console.log(username,email,password)
     const newUser = new users({ username, email, password });
     await newUser.save();
     const token = createToken(newUser._id);
@@ -60,7 +60,7 @@ router.post("/register", async (req, res, next) => {
     });
     res
     .status(200)
-    .json({ user: authenticatedUser._id, loggedIn: true, token: token });
+    .json({ user: username._id, loggedIn: true, token: token });
   } catch (error) {
     const errors = handelErrors(error);
     res.json({ errors, created: false });
