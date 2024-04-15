@@ -31,9 +31,7 @@ userSchema.pre("save", async function (next) {
     next(error);
   }
 });
-userSchema.methods.comparepassword = function (password) {
-  return bcrypt.compareSync(password, this.password);
-};
+
 mongoose.connect(process.env.MONGO_URL).then((result)=>{
   console.log("connected to database")
 }).catch(err=>{

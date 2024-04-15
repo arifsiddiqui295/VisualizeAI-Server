@@ -58,7 +58,9 @@ router.post("/register", async (req, res, next) => {
       httpOnly: false,
       maxAge: maxAge * 1000,
     });
-    res.status(201).json({ user: newUser._id, created: true });
+    res
+    .status(200)
+    .json({ user: authenticatedUser._id, loggedIn: true, token: token });
   } catch (error) {
     const errors = handelErrors(error);
     res.json({ errors, created: false });
@@ -70,16 +72,18 @@ router.post("/login", async (req, res, next) => {
   console.log("password", password);
   try {
     const authenticatedUser = await users.findOne({ username });
-    console.log("authenticatedUser", authenticatedUser);
+    console.log("authenticatedUser", authenticatedUser.password);
     if (!authenticatedUser) {
       const errors = handelErrors("Invalid username");
     }
-    const auth = await authenticatedUser.comparepassword(req.body.password);
-    console.log("auth", auth);
-    if (!auth) {
-      const errors = handelErrors("Invalid password");
-    }
-
+    const auth = await bcrypt.compare(password, authenticatedUser.password);
+    console.log('Provided password:', password);
+    console.log('Hashed password from database:', authenticatedUser.password);
+    console.log('auth = ', auth);
+    
+    // if (!auth) {
+    //   const errors = handelErrors("Invalid password");
+    // }
     const token = createToken(authenticatedUser._id);
     console.log("token = ", token);
     res.cookie("jwt", token, {
@@ -144,7 +148,7 @@ router.post("/api/logout", async (req, res) => {
 });
 router.post("/api/v1/dalle", async (req, res) => {
   const { prompt } = req.body;
-  // console.log(prompt);
+  console.log(prompt);
   try {
     const response = await axios.post(
       "https://api.openai.com/v1/images/generations",
@@ -161,7 +165,7 @@ router.post("/api/v1/dalle", async (req, res) => {
         },
       }
     );
-    // console.log(response.data); // Log the response data
+    console.log(response.data);
     res.status(200).json({ photo: response.data });
   } catch (error) {
     console.error("Error while making the request:", error);
